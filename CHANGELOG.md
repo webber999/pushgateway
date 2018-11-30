@@ -1,3 +1,10 @@
+## 0.6.0 / 2018-11-30
+
+Add my branch: feature/aging_time
+
+* [FEATURE] Add aging.time flag, default value 5m. If the grouping-key data has not been update by pusher over the aging time,
+            pushgateway's self monitor will delete the grouping-key by HTTP API.
+
 ## 0.6.0 / 2018-10-17
 
 * [CHANGE] Enforce consistency of help strings by changing them during

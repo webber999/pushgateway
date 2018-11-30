@@ -14,6 +14,7 @@
 package main
 
 import (
+	"github.com/prometheus/pushgateway/monitor"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -52,6 +53,7 @@ func main() {
 		routePrefix         = app.Flag("web.route-prefix", "Prefix for the internal routes of web endpoints.").Default("").String()
 		persistenceFile     = app.Flag("persistence.file", "File to persist metrics. If empty, metrics are only kept in memory.").Default("").String()
 		persistenceInterval = app.Flag("persistence.interval", "The minimum interval at which to write out the persistence file.").Default("5m").Duration()
+		agingTime           = app.Flag("aging.time", "If the data has not been pushed after aging time, the metric will be deleted.").Default("5m").Duration()
 	)
 	log.AddFlags(app)
 	app.Version(version.Print("pushgateway"))
@@ -64,6 +66,12 @@ func main() {
 	if *routePrefix != "" {
 		*routePrefix = "/" + strings.Trim(*routePrefix, "/")
 	}
+
+	if *agingTime < time.Minute {
+		panic("unexpected aging time, it should be larger than 1 minute")
+	}
+	// aging time goroutine
+	go monitor.SelfMonitorAgingTime(*agingTime, *listenAddress, *metricsPath, *routePrefix)
 
 	log.Infoln("Starting pushgateway", version.Info())
 	log.Infoln("Build context", version.BuildContext())
